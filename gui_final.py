@@ -1,10 +1,5 @@
-import inspect
-import threading
-
 import rx
-import reactivex
 from rx.scheduler import NewThreadScheduler
-from threading import currentThread
 from datetime import *
 import glob
 import ntpath
@@ -20,7 +15,7 @@ from PIL import Image, ImageTk
 from serial import SerialException, PortNotOpenError
 
 
-def sub_frame(field, num=1, side=TOP, expand=False, fill=None, padx=1, pady=1, last_e=True, bg=None):
+def sub_frame(field, num, side, expand=False, fill=None, padx=1, pady=1, last_e=True, bg=None):
     for index in range(0, num):
         field[index + 1] = [Frame(field[0], bg=bg), []]
         field.append([])
@@ -75,10 +70,10 @@ class GUI:
         self.cwd = os.path.dirname(__file__) + '\\'
         self.my_head_port = None
         self.my_head_port_device = None
-        self.ser_head = False
+        self.ser_head = serial.Serial()
         self.my_body_port = None
         self.my_body_port_device = None
-        self.ser_body = False
+        self.ser_body = serial.Serial()
         self.head_found = False
         self.body_found = False
         self.headline = ''
@@ -344,7 +339,7 @@ class GUI:
 
         self.voltage.set(0.4)
         scale1 = Scale(self.frames_page2[4][2][0], variable=self.voltage, from_=0.4, to=1.1, resolution=0.001,
-                       orient=HORIZONTAL, showvalue=0)
+                       orient=HORIZONTAL, showvalue=False)
         spinbox1 = Spinbox(self.frames_page2[4][2][0], from_=0.4, to=1.1, width=6, font=15, textvariable=self.voltage,
                            increment=0.001, justify=RIGHT)
         voltage_set_button = Button(self.frames_page2[4][2][0], text='Set', font=10,
@@ -382,7 +377,7 @@ class GUI:
 
         self.tp.set(5)
         scale3 = Scale(self.frames_page2[6][2][0], variable=self.tp, from_=5, to=30, resolution=0.1,
-                       orient=HORIZONTAL, showvalue=0)
+                       orient=HORIZONTAL, showvalue=False)
         spinbox3 = Spinbox(self.frames_page2[6][2][0], from_=5, to=30, increment=0.1, textvariable=self.tp, font=15,
                            width=5,
                            justify=RIGHT)
@@ -654,6 +649,7 @@ class GUI:
                         break
         gif_run.set(False)
         time.sleep(0.1)
+        self.reset_carousels()
         if self.head_found:
             self.win.after(50, lambda: self.gui_change('GreenH'))
             if self.page == 0:
