@@ -649,9 +649,8 @@ class GUI:
                         break
         gif_run.set(False)
         time.sleep(0.1)
-        self.reset_carousels()
         if self.head_found:
-            self.win.after(50, lambda: self.gui_change('GreenH'))
+            self.reset_carousels()
             if self.page == 0:
                 self.ready_check_menu()
             elif self.page == 3:
