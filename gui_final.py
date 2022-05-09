@@ -1169,9 +1169,9 @@ class GUI:
         # print("{0}: {1}".format(inspect.stack()[0][3], currentThread()))
         gif_run = BooleanVar(value=True)
         self.win.after(50, lambda: self.gui_change('WorkingH', gif_run))
-        self.win.after(50, lambda: self.gui_change('TextH', 'Reseting carousel 0'))
+        self.win.after(50, lambda: self.gui_change('TextH', 'Resetting carousel 0'))
         ans1 = self.head_communicate('RFL0XXXX')
-        self.win.after(50, lambda: self.gui_change('TextH', 'Reseting carousel 1'))
+        self.win.after(50, lambda: self.gui_change('TextH', 'Resetting carousel 1'))
 
         ans2 = self.head_communicate('RFL1XXXX')
         gif_run.set(False)
