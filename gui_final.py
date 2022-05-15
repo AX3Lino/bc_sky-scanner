@@ -147,7 +147,7 @@ class GUI:
             sub_frame(self.frames_page2[i + 1], 3, TOP, False, BOTH, 1, 1, True)
         sub_frame(self.frames_page2[3][1], 2, LEFT, True, BOTH)
         sub_frame(self.frames_page2[3][2], 2, LEFT, True, BOTH)
-        sub_frame(self.frames_page3, 4, TOP, True, BOTH, 10, 1, True, 'grey')
+        sub_frame(self.frames_page3, 4, TOP, True, BOTH, 10, 1, True)
         sub_frame(self.frames_page4, 2, TOP, False, BOTH, 10, 10, True)
 
         # status_build
@@ -164,7 +164,7 @@ class GUI:
         # menu_build
         self.button_continue = Button(self.frames_menu[1][1][0], text="Continue",
                                       command=lambda: switch_frame(self.frame_menu, self.continue_menu), state=DISABLED)
-        self.button_files = Button(self.frames_menu[1][1][0], text="File config",
+        self.button_files = Button(self.frames_menu[1][1][0], text="File configuration",
                                    command=lambda: switch_frame(self.frame_menu, self.page1), state=DISABLED)
         self.button_settings = Button(self.frames_menu[1][1][0], text="Settings",
                                       command=lambda: switch_frame(self.frame_menu, self.page2), state=DISABLED)
@@ -209,7 +209,7 @@ class GUI:
         self.page3_build()
 
         # page4_build
-        self.label_end_status = Label(self.frames_page4[1][0], font=('Helvetica', 18))
+        self.label_end_status = Label(self.frames_page4[1][0])
         self.page4_build()
 
         new_thread(self.menu)
@@ -396,7 +396,7 @@ class GUI:
 
         button_menu = Button(self.frames_page2[7][2][0], text='Menu',
                              command=lambda: new_thread(lambda: self.page2_end(0)))
-        button_files = Button(self.frames_page2[7][2][0], text='File config',
+        button_files = Button(self.frames_page2[7][2][0], text='File configuration',
                               command=lambda: new_thread(lambda: self.page2_end(1)))
         button_menu.pack(side=LEFT)
         self.button_measure_p2.pack(side=RIGHT)
@@ -419,10 +419,8 @@ class GUI:
     def page4_build(self):
         # print("{0}: {1}".format(inspect.stack()[0][3], currentThread()))
         self.label_end_status.pack()
-        button_menu = Button(self.frames_page4[2][0], text='Menu', font=('Helvetica', 18),
-                             command=lambda: new_thread(lambda: self.page4_end(1)))
-        button_close = Button(self.frames_page4[2][0], text='Close', font=('Helvetica', 18),
-                              command=lambda: new_thread(lambda: self.page4_end(0)))
+        button_menu = Button(self.frames_page4[2][0], text='Menu', command=lambda: new_thread(lambda: self.page4_end(1)))
+        button_close = Button(self.frames_page4[2][0], text='Close',command=lambda: new_thread(lambda: self.page4_end(0)))
         button_menu.pack(side=LEFT)
         button_close.pack(side=RIGHT)
 
@@ -455,7 +453,7 @@ class GUI:
         # print("{0}: {1}".format(inspect.stack()[0][3], currentThread()))
         self.page = 1
         self.frame_page1.pack(expand=True, fill=BOTH)
-        self.win.wm_title('Sky_scanner: Command selection')
+        self.win.wm_title('Sky_scanner: File configuration')
         self.ready_check_measure()
 
     def page2(self):
