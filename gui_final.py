@@ -14,6 +14,8 @@ import serial
 from PIL import Image, ImageTk
 from serial import SerialException, PortNotOpenError
 
+version = 10  # "10nm" or "40nm"
+
 
 def sub_frame(field, num, side, expand=False, fill=None, padx=1, pady=1, last_e=True, bg=None):
     for index in range(0, num):
@@ -58,7 +60,7 @@ class GUI:
     def __init__(self):
         # print("{0}: {1}".format(inspect.stack()[0][3], currentThread()))
         self.win = Tk()
-        self.win.geometry('800x600')
+        self.win.geometry('900x675')
         self.win.minsize(800, 600)
         # Button(text='threads?', command=lambda: print('ACTIVE:', threading.active_count())).pack()
         self.defaultFont = font.nametofont('TkDefaultFont')
@@ -77,6 +79,8 @@ class GUI:
         self.head_found = False
         self.body_found = False
         self.headline = ''
+        self.time = ''
+        self.custom = False
         self.file_positions_path = ''
         self.file_measurements_path = ''
         self.filename_out = ''
@@ -174,11 +178,11 @@ class GUI:
         # page1_build
         self.label_meas_file_resB = Label(self.frames_page1[1][2][0], image=self.photo_red)
         self.combo_p2_a = ttk.Combobox(self.frames_page1[1][2][0], values=self.options1, state="readonly",
-                                       width=len(max(self.options1)) + 1)
+                                       width=len(max(self.options1)) + 5)
         self.label_meas_file_resA = Label(self.frames_page1[1][3][0], text='', font=10)
         self.label_pos_file_resB = Label(self.frames_page1[2][2][0], image=self.photo_red)
         self.combo_p2_b = ttk.Combobox(self.frames_page1[2][2][0], values=self.options2, state="readonly",
-                                       width=len(max(self.options2)) + 1)
+                                       width=len(max(self.options2)) + 5)
         self.label_pos_file_resA = Label(self.frames_page1[2][3][0], text='', font=10)
         self.label_output_file_path = StringVar()
         self.entry1 = Entry(self.frames_page1[3][2][0], state="readonly", bd=0,
@@ -197,7 +201,7 @@ class GUI:
         self.num_mes = IntVar()
         self.tp = DoubleVar()
         self.button_measure_p2 = Button(self.frames_page2[7][2][0], text='Start measurement', state=DISABLED,
-                                        command=lambda: new_thread(lambda: self.page2_end(3)))
+                                        command=lambda: switch_frame(self.frame_page1, self.page3))
         self.page2_build()
 
         # page3_build
@@ -258,10 +262,11 @@ class GUI:
         button1 = Button(self.frames_page1[3][2][0], text='Browse', command=self.chose_output_file, font='10')
 
         self.label_output_file_path.set(self.cwd)
+
         self.output_file_name.set('Output_' + self.time + '.txt')
         self.filename_out = self.cwd + self.output_file_name.get()
-        self.entry1.config(width=len(self.label_output_file_path.get()))
-        self.entry2.config(width=len(self.output_file_name.get()) + 1)
+        self.entry1.config(width=len(self.label_output_file_path.get()) + 5)
+        self.entry2.config(width=len(self.output_file_name.get()) + 5)
         self.entry2.bind('<KeyPress>', self.resize_entry2)
         label4.pack(side=LEFT)
         button1.pack(side=RIGHT)
@@ -303,12 +308,32 @@ class GUI:
 
         self.var_f.set('SFL100XX')
         filter_buttons = []
-        options_color = [('close', 'SFL100XX', 'grey'), ('400', 'SFL101XX', '#8300b5'), ('450', 'SFL102XX', '#0046ff'),
-                         ('500', 'SFL103XX', '#00ff92'),
-                         ('550', 'SFL104XX', '#a3ff00'), ('600', 'SFL105XX', '#ffbe00'), ('650', 'SFL107XX', '#ff0000'),
-                         ('700', 'SFL108XX', '#F10000'),
-                         ('750', 'SFL109XX', '#a10000'), ('800', 'SFL110XX', '#610000'), ('850', 'SFL111XX', '#401010'),
-                         ('open', 'SFL106XX', '#FFFFFF')]
+        if version == 40:
+            options_color = [('close', 'SFL100XX', 'grey'),
+                             ('400', 'SFL101XX', '#8300b5'),
+                             ('450', 'SFL102XX', '#0046ff'),
+                             ('500', 'SFL103XX', '#00ff92'),
+                             ('550', 'SFL104XX', '#a3ff00'),
+                             ('600', 'SFL105XX', '#ffbe00'),
+                             ('650', 'SFL107XX', '#ff0000'),
+                             ('700', 'SFL108XX', '#F10000'),
+                             ('750', 'SFL109XX', '#a10000'),
+                             ('800', 'SFL110XX', '#610000'),
+                             ('850', 'SFL111XX', '#401010'),
+                             ('open', 'SFL106XX', '#FFFFFF')]
+        else:
+            options_color = [('close', 'SFL100XX', 'grey'),
+                             ('350', 'SFL101XX', '#430065'),
+                             ('400', 'SFL102XX', '#8300b5'),
+                             ('450', 'SFL103XX', '#0046ff'),
+                             ('500', 'SFL104XX', '#00ff92'),
+                             ('550', 'SFL105XX', '#a3ff00'),
+                             ('600', 'SFL107XX', '#ffbe00'),
+                             ('650', 'SFL108XX', '#ff0000'),
+                             ('700', 'SFL109XX', '#F10000'),
+                             ('750', 'SFL110XX', '#a10000'),
+                             ('800', 'SFL111XX', '#610000'),
+                             ('open', 'SFL106XX', '#FFFFFF')]
         for count, item in enumerate(options_color):
             filter_buttons.append(
                 Radiobutton(self.frames_page2[2][2][0], text=item[0], variable=self.var_f, value=item[1],
@@ -322,13 +347,13 @@ class GUI:
         label3a = Label(self.frames_page2[3][1][2][0], text='Reset carousel:')
         label3.pack(side=LEFT)
         label3a.pack(side=LEFT)
-        get_c0_button = Button(self.frames_page2[3][2][1][0], text='Get carousel 0 position', font=10,
+        get_c0_button = Button(self.frames_page2[3][2][1][0], text='Get carousel 0', font=10,
                                command=lambda: new_thread(lambda: self.setup_command('GFL0XXXX')))
-        get_c1_button = Button(self.frames_page2[3][2][1][0], text='Get carousel 1 position', font=10,
+        get_c1_button = Button(self.frames_page2[3][2][1][0], text='Get carousel 1', font=10,
                                command=lambda: new_thread(lambda: self.setup_command('GFL1XXXX')))
-        reset_c0_button = Button(self.frames_page2[3][2][2][0], text='Reset carousel 0 position', font=10,
+        reset_c0_button = Button(self.frames_page2[3][2][2][0], text='Reset carousel 0', font=10,
                                  command=lambda: new_thread(lambda: self.setup_command('RFL0XXXX')))
-        reset_c1_button = Button(self.frames_page2[3][2][2][0], text='Reset carousel 1 position', font=10,
+        reset_c1_button = Button(self.frames_page2[3][2][2][0], text='Reset carousel 1', font=10,
                                  command=lambda: new_thread(lambda: self.setup_command('RFL1XXXX')))
         get_c0_button.pack(side=LEFT)
         get_c1_button.pack(side=LEFT, padx=10)
@@ -345,9 +370,9 @@ class GUI:
         voltage_set_button = Button(self.frames_page2[4][2][0], text='Set', font=10,
                                     command=lambda: new_thread(lambda: self.setup_command
                                     ('SCV' + str("%0.4f" % self.voltage.get()).replace('.', ''))))
-        voltage_get_button = Button(self.frames_page2[4][2][0], text='Get current voltage', font=10,
+        voltage_get_button = Button(self.frames_page2[4][2][0], text='Get control voltage', font=10,
                                     command=lambda: new_thread(lambda: self.setup_command('GCVXXXXX')))
-        voltage_now_button = Button(self.frames_page2[4][2][0], text='Get measurement voltage', font=10,
+        voltage_now_button = Button(self.frames_page2[4][2][0], text='Get signal voltage', font=10,
                                     command=lambda: new_thread(lambda: self.setup_command('GSVXXXXX')))
         label4.pack(side=LEFT)
         voltage_set_button.pack(side=LEFT)
@@ -384,7 +409,7 @@ class GUI:
         temp_set_button = Button(self.frames_page2[6][2][0], text='Set', font=10,
                                  command=lambda: new_thread(lambda: self.setup_command
                                  ('STP+' + str("%0.3f" % (float(self.tp.get()) / 100)).replace('.', ''))))
-        temp_get_button = Button(self.frames_page2[6][2][0], text='Get min temperature', font=10,
+        temp_get_button = Button(self.frames_page2[6][2][0], text='Get temperature', font=10,
                                  command=lambda: new_thread(lambda: self.setup_command('GTPXXXXX')))
         label6.pack(side=LEFT)
         temp_set_button.pack(side=LEFT)
@@ -395,9 +420,9 @@ class GUI:
         self.frames_page2[7][0] = self.frame_status_1
 
         button_menu = Button(self.frames_page2[7][2][0], text='Menu',
-                             command=lambda: new_thread(lambda: self.page2_end(0)))
+                             command=lambda: switch_frame(self.frame_page1, self.menu))
         button_files = Button(self.frames_page2[7][2][0], text='File configuration',
-                              command=lambda: new_thread(lambda: self.page2_end(1)))
+                              command=lambda: switch_frame(self.frame_page1, self.page1))
         button_menu.pack(side=LEFT)
         self.button_measure_p2.pack(side=RIGHT)
         button_files.pack(side=RIGHT)
@@ -419,8 +444,10 @@ class GUI:
     def page4_build(self):
         # print("{0}: {1}".format(inspect.stack()[0][3], currentThread()))
         self.label_end_status.pack()
-        button_menu = Button(self.frames_page4[2][0], text='Menu', command=lambda: new_thread(lambda: self.page4_end(1)))
-        button_close = Button(self.frames_page4[2][0], text='Close',command=lambda: new_thread(lambda: self.page4_end(0)))
+        button_menu = Button(self.frames_page4[2][0], text='Menu',
+                             command=lambda: new_thread(lambda: self.page4_end(1)))
+        button_close = Button(self.frames_page4[2][0], text='Close',
+                              command=lambda: new_thread(lambda: self.page4_end(0)))
         button_menu.pack(side=LEFT)
         button_close.pack(side=RIGHT)
 
@@ -454,6 +481,10 @@ class GUI:
         self.page = 1
         self.frame_page1.pack(expand=True, fill=BOTH)
         self.win.wm_title('Sky_scanner: File configuration')
+        if not self.custom:
+            self.time = str(date.today()) + '_' + str(datetime.now().hour) + '-' + str(datetime.now().minute)
+            self.output_file_name.set('Output_' + self.time + '.txt')
+            self.filename_out = self.cwd + self.output_file_name.get()
         self.ready_check_measure()
 
     def page2(self):
@@ -468,37 +499,28 @@ class GUI:
             self.win.after(50, lambda: self.gui_change('RefreshH'))
         self.ready_check_measure()
 
-    def page2_end(self, to):
-        # print("{0}: {1}".format(inspect.stack()[0][3], currentThread()))
-        self.file_settings = open(self.cwd + 'running_commands.txt', 'w')
-        self.file_settings.write(self.var_p.get() + '\n')
-        self.file_settings.write(self.var_f.get() + '\n')
-        self.file_settings.write('SCV' + str("%0.4f" % self.voltage.get()).replace('.', '') + '\n')
-        self.file_settings.write('SNM' + str("%0.4f" % (float(self.num_mes.get()) / 10000)).replace('.', '') + '\n')
-        self.file_settings.write('STP+' + str("%0.3f" % (float(self.tp.get()) / 100)).replace('.', '') + '\n')
-        self.file_settings.close()
-        if to == 0:
-            switch_frame(self.frame_page2, self.menu)
-        elif to == 1:
-            switch_frame(self.frame_page2, self.page1)
-        elif to == 3:
-            buf = 'z.angle' + '\t' + 'azimuth' + '\t' + '%s\n' % self.headline
-            fileout = open(self.filename_out, "a")
-            fileout.write(buf)
-            fileout.close()
-            switch_frame(self.frame_page2, self.page3)
-
     def page3(self):
         # print("{0}: {1}".format(inspect.stack()[0][3], currentThread()))
         self.win.wm_title('Sky_scanner: Measurement')
         self.page = 3
         self.frame_page3.pack(expand=True, fill=BOTH)
-        self.frame.update()
+
         self.canvas.delete('all')
+        self.frame.update()
         new_thread(self.create_coordinates)
         if self.continuing:
             new_thread(self.read_running)
         else:
+            self.file_settings = open(self.cwd + 'running_commands.txt', 'w')
+            self.file_settings.write(self.var_p.get() + '\n')
+            self.file_settings.write(self.var_f.get() + '\n')
+            self.file_settings.write('SCV' + str("%0.4f" % self.voltage.get()).replace('.', '') + '\n')
+            self.file_settings.write('SNM' + str("%0.4f" % (float(self.num_mes.get()) / 10000)).replace('.', '') + '\n')
+            self.file_settings.write('STP+' + str("%0.3f" % (float(self.tp.get()) / 100)).replace('.', '') + '\n')
+            self.file_settings.close()
+            fileout = open(self.filename_out, "w")  # clears / create new file
+            fileout.write('z.angle' + '\t' + 'azimuth' + '\t' + '%s\n' % self.headline)
+            fileout.close()
             file = open(self.cwd + 'running.txt', 'w')
             file.write(self.file_positions_path + '\n')
             file.write(self.file_measurements_path + '\n')
@@ -527,6 +549,8 @@ class GUI:
             self.continuing = False
             self.continue_no = 0
             self.index = 0
+            self.custom = False
+            self.time = str(date.today()) + '_' + str(datetime.now().hour) + '-' + str(datetime.now().minute)
             switch_frame(self.frame_page4, self.menu)
         else:
             self.win.destroy()
@@ -609,9 +633,9 @@ class GUI:
         elif case == 'SetB':
             self.label_body_com.config(text=args[0])
             self.label_body_status.config(image=self.photo_green)
-        elif case == 'ErrorH':
+        elif case == 'WarningH':
             self.label_head_com.config(text=args[0])
-            self.label_head_status.config(image=self.photo_red)
+            self.label_head_status.config(image=self.photo_orange)
         elif case == 'ReadPosFile':
             self.label_pos_file_resB.config(text=args[0])
             self.label_pos_file_resB.config(image=args[1])
@@ -806,17 +830,14 @@ class GUI:
                 self.estimate_time(first_time, countdown)
                 countdown = True
             first = False
-            self.set_ipano_position(height, azimuth)
-            if not self.body_found:
-                self.continue_no = self.index
-                self.index = 0
-                break
-            buf = '%.2f\t%.2f\t' % (90.0 - height, azimuth)
-            buf = self.measure_head(buf)
-            if not self.head_found:
-                self.continue_no = self.index
-                self.index = 0
-                break
+            buf = -1
+            while buf ==-1:
+                self.set_ipano_position(height, azimuth)
+                buf = self.measure_head('%.2f\t%.2f\t' % (90.0 - height, azimuth))
+                if self.stopper:  # check for key pressed: loop until problem solved
+                    self.win.after(50, lambda: self.gui_change('Paused'))
+                    while self.stopper:
+                        time.sleep(1)
             self.create_dot(height, azimuth, average(self.value_list))
             buf = buf + '\n'
             fileout = open(self.filename_out, "a")
@@ -877,12 +898,14 @@ class GUI:
             return answer.decode
         except PortNotOpenError:
             print('port not open')
+            gif_run.set(False)
             self.body_found = False
             self.win.after(50, lambda: self.gui_change('RefreshB'))
             self.stopper = True
         except Exception as ex:
             print(ex)
             print('body discnected')
+            gif_run.set(False)
             self.body_found = False
             self.ser_body.close()
             self.win.after(50, lambda: self.gui_change('RefreshB'))
@@ -917,7 +940,7 @@ class GUI:
     def estimate_time(self, first_time, countdown):
         # print("{0}: {1}".format(inspect.stack()[0][3], currentThread()))
         t = (len(self.positions) - self.index) * (time.time() - first_time - self.paused_time) / (
-                    self.index - self.continue_no)
+                self.index - self.continue_no)
         convert = timedelta(seconds=t)
         self.times = int(convert.total_seconds())
         if not countdown:
@@ -959,12 +982,15 @@ class GUI:
     def restore_connection(self):
         # print("{0}: {1}".format(inspect.stack()[0][3], currentThread()))
         self.read_running_commands()
-        self.stopper = False
+        # self.stopper = False
         self.frame.update()
 
     def resize_entry2(self, event):
         # print("{0}: {1}".format(inspect.stack()[0][3], currentThread()))
-        self.entry2.config(width=(len(self.output_file_name.get())) + 1)
+        self.custom = True
+        self.entry2.config(width=(len(self.output_file_name.get())) + 5)
+        self.filename_out = self.cwd + self.output_file_name.get()
+
 
     def setup_command(self, com):
         # print("{0}: {1}".format(inspect.stack()[0][3], currentThread()))
@@ -1016,7 +1042,7 @@ class GUI:
             return ans
         if ans == 'UNKNOWN!':
             text = 'Prototype does not have this function'
-            self.win.after(50, lambda: self.gui_change('ErrorH', text))
+            self.win.after(50, lambda: self.gui_change('WarningH', text))
             return ans
         suf = ans[3:]
         if ans.startswith('FLT'):
@@ -1037,10 +1063,10 @@ class GUI:
             text = 'Signal voltage: ' + suf[:1] + '.' + suf[1:] + 'V'
             self.win.after(50, lambda: self.gui_change('SetH', text))
         elif ans.startswith('NMA'):
-            text = 'Number of measurement averaged: ' + str(int(suf))
+            text = 'Number of measurements averaged: ' + str(int(suf))
             self.win.after(50, lambda: self.gui_change('SetH', text))
         elif ans.startswith('TPV'):
-            text = 'Minimum temperature set at: ' + suf[:1] + suf[2:4] + '.' + suf[4:] + '°C'
+            text = 'Temperature: ' + suf[:1] + suf[2:4] + '.' + suf[4:] + '°C'
             self.win.after(50, lambda: self.gui_change('SetH', text))
         return ans
 
@@ -1050,7 +1076,7 @@ class GUI:
             self.file_measurements_path = filedialog.askopenfilename()
             self.combo_p2_a.set(path_leaf(self.file_measurements_path))
             add_option(self.options1, path_leaf(self.file_measurements_path))
-            length = len(max(self.options1, key=len)) + 1
+            length = len(max(self.options1, key=len)) + 5
             self.win.after(50, lambda: self.gui_change('Combo_p2_a', self.options1, length))
         else:
             self.file_measurements_path = self.options1_loc + self.combo_p2_a.get()
@@ -1062,7 +1088,7 @@ class GUI:
             self.file_positions_path = filedialog.askopenfilename()  # parent=root - dialog on top
             self.combo_p2_b.set(path_leaf(self.file_positions_path))
             add_option(self.options2, path_leaf(self.file_positions_path))
-            length = len(max(self.options2, key=len)) + 1
+            length = len(max(self.options2, key=len)) + 5
             self.win.after(50, lambda: self.gui_change('Combo_p2_b', self.options2, length))
         else:
             self.file_positions_path = self.options2_loc + self.combo_p2_b.get()
@@ -1074,10 +1100,11 @@ class GUI:
         if self.filename_out == '':  # asksaveasfile return `None` if dialog closed with "cancel".
             self.time = str(date.today()) + '_' + str(datetime.now().hour) + '-' + str(datetime.now().minute)
             self.filename_out = str(self.cwd) + 'Output_' + self.time + '.txt'
-        fileout = open(self.filename_out, "w")
-        fileout.close()  # clear the content of the file
+            self.custom = False
+        else:
+            self.custom = True
         length1 = len(self.label_output_file_path.get())
-        length2 = len(self.output_file_name.get()) + 1
+        length2 = len(self.output_file_name.get()) + 5
         self.win.after(50, lambda: self.gui_change('OutputFile', length1, length2))
 
     def read_measurement_fail(self):
@@ -1166,11 +1193,9 @@ class GUI:
     def reset_carousels(self):
         # print("{0}: {1}".format(inspect.stack()[0][3], currentThread()))
         gif_run = BooleanVar(value=True)
-        self.win.after(50, lambda: self.gui_change('WorkingH', gif_run))
         self.win.after(50, lambda: self.gui_change('TextH', 'Resetting carousel 0'))
         ans1 = self.head_communicate('RFL0XXXX')
         self.win.after(50, lambda: self.gui_change('TextH', 'Resetting carousel 1'))
-
         ans2 = self.head_communicate('RFL1XXXX')
         gif_run.set(False)
         self.win.after(50, lambda: self.gui_change('TextH', 'Measurement head ready'))
