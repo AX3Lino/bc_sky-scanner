@@ -1,4 +1,0 @@
-D:\prog\python\sky_scanner\test_2.txt
-D:\prog\python\sky_scanner\test_1.txt
-D:\prog\python\sky_scanner\Output_2022-03-26_16-10.txt
-0
