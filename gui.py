@@ -19,7 +19,7 @@ debugging = False
 
 ''' create exe file with command
 pyinstaller --onefile -w gui.py
-move dist\gui.exe ..
+move dist\gui.exe .
 '''
 
 def sub_frame(field, num, side, expand=False, fill=None, pad_x=1, pad_y=1, last_e=True, bg=None):
