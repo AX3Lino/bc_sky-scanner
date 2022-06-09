@@ -15,7 +15,11 @@ from PIL import Image, ImageTk
 from serial import SerialException, PortNotOpenError
 
 version = 10  # "10nm" or "40nm"
+debugging = False
 
+''' create exe file with command
+pyinstaller --onefile -w gui.py
+'''
 
 def sub_frame(field, num, side, expand=False, fill=None, pad_x=1, pad_y=1, last_e=True, bg=None):
     for index in range(0, num):
@@ -199,7 +203,7 @@ class GUI:
         self.num_mes = IntVar()
         self.tp = DoubleVar()
         self.button_measure_p2 = Button(self.frames_page2[7][2][0], text='Start measurement', state=DISABLED,
-                                        command=lambda: switch_frame(self.frame_page1, self.page3))
+                                        command=lambda: switch_frame(self.frame_page2, self.page3))
         self.page2_build()
 
         # page3_build
@@ -261,6 +265,7 @@ class GUI:
         self.entry1.config(width=len(self.label_output_file_path.get()) + 5)
         self.entry2.config(width=len(self.output_file_name.get()) + 5)
         self.entry2.bind('<KeyPress>', self.resize_entry2)
+        self.entry2.bind('<KeyRelease>', self.resize_entry2)
         label4.pack(side=LEFT)
         button1.pack(side=RIGHT)
         self.entry1.pack(side=LEFT)
@@ -412,9 +417,9 @@ class GUI:
         self.frames_page2[7][0] = self.frame_status_1
 
         button_menu = Button(self.frames_page2[7][2][0], text='Menu',
-                             command=lambda: switch_frame(self.frame_page1, self.menu))
+                             command=lambda: switch_frame(self.frame_page2, self.menu))
         button_files = Button(self.frames_page2[7][2][0], text='File configuration',
-                              command=lambda: switch_frame(self.frame_page1, self.page1))
+                              command=lambda: switch_frame(self.frame_page2, self.page1))
         button_menu.pack(side=LEFT)
         self.button_measure_p2.pack(side=RIGHT)
         button_files.pack(side=RIGHT)
@@ -687,6 +692,8 @@ class GUI:
             self.frame.update()
         else:
             self.win.after(50, lambda: self.gui_change('RefreshB'))
+            if debugging:
+                self.win.after(50, lambda: self.gui_change('MenuRdy'))  # testing purposes
 
     def port_head(self, port, port_device):
         try:
@@ -778,6 +785,9 @@ class GUI:
         self.tp.set(int(self.running_commands[4][3:]) / 10)
 
     def ready_check_measure(self):
+        if debugging:
+            self.win.after(50, lambda: self.gui_change('MeasureRdy', NORMAL))
+            return True
         for i in self.measure_rdy:
             if not i:
                 self.win.after(50, lambda: self.gui_change('MeasureRdy', DISABLED))
@@ -802,12 +812,13 @@ class GUI:
                 countdown = True
             first = False
             buf = -1
-            while buf ==-1:
+            while buf == -1:
                 self.set_ipano_position(height, azimuth)
                 buf = self.measure_head('%.2f\t%.2f\t' % (90.0 - height, azimuth))
-                if self.stopper:  # check for key pressed: loop until problem solved
+                if self.stopper:  # check for key pressed
+                    buf = -1  # to restart last measurement
                     self.win.after(50, lambda: self.gui_change('Paused'))
-                    while self.stopper:
+                    while self.stopper:  # loop until problem is solved
                         time.sleep(1)
             self.create_dot(height, azimuth, average(self.value_list))
             buf = buf + '\n'
@@ -949,7 +960,6 @@ class GUI:
         self.custom = True
         self.entry2.config(width=(len(self.output_file_name.get())) + 5)
         self.filename_out = self.cwd + self.output_file_name.get()
-
 
     def setup_command(self, com):
         if not self.head_found:
